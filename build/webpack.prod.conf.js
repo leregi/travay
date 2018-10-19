@@ -108,7 +108,7 @@ const webpackConfig = merge(baseWebpackConfig, {
     // see: https://webpack.js.org/plugins/commons-chunk-plugin/#extra-async-commons-chunk
     new webpack.optimize.CommonsChunkPlugin({
       name: 'app',
-      async: 'vendor-async',
+      async: true,
       children: true,
       minChunks: 3
     }),
