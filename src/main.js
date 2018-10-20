@@ -5,7 +5,7 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
-import {store} from './store/'
+import { store } from './store/'
 import VueUI from 'vue-ui/dist/vue-ui.common';
 import 'vue-ui/dist/vue-ui.css';
 import 'vue-loading-overlay/dist/vue-loading.min.css';
@@ -51,6 +51,7 @@ const dateTimeFormats = {
   }
 };
 
+// Create VueI18n instance with options
 export const i18n = new VueI18n({
   locale: 'ht', // set default locale
   messages,
@@ -67,25 +68,25 @@ Vue.use(VueUI, {
 });
 
 // vue-multianalytics
- let gaConfig = {
-   appName: 'Travay',
-   appVersion: '0.0.1',
-   // trackingId: 'UA-71718222-9', // Prod
-   trackingId: 'UA-71718222-10', // Dev
-   debug: true, // Whether or not display console logs debugs (optional)
- };
+let gaConfig = {
+  appName: 'Travay',
+  appVersion: '0.0.1',
+  // trackingId: 'UA-71718222-9', // Prod
+  trackingId: 'UA-71718222-10', // Dev
+  debug: true, // Whether or not display console logs debugs (optional)
+};
 
- let mixpanelConfig = {
-   // token: '4be6f13d7bef9dab00a44273cade05a3' // Prod
-   token: '3bfe6ae0af73a824d94cfc4ec8c4d4b8' // Dev
- };
+let mixpanelConfig = {
+  // token: '4be6f13d7bef9dab00a44273cade05a3' // Prod
+  token: '3bfe6ae0af73a824d94cfc4ec8c4d4b8' // Dev
+};
 
- Vue.use(VueMultianalytics, {
-   modules: {
-     ga: gaConfig,
-     mixpanel: mixpanelConfig
-   }
- });
+Vue.use(VueMultianalytics, {
+  modules: {
+    ga: gaConfig,
+    mixpanel: mixpanelConfig
+  }
+});
 
 Vue.use(InstantSearch);
 
@@ -96,7 +97,7 @@ new Vue({
   router,
   store,
   i18n,
-  components: {App},
+  components: { App },
   template: '<App/>'
 });
 
@@ -104,24 +105,20 @@ const prod = process.env.NODE_ENV === 'production';
 const shouldSW = 'serviceWorker' in navigator && prod;
 
 if (shouldSW) {
-  navigator.serviceWorker.register('/service-worker.js').then((reg) => {
-    reg.onupdatefound = () => {
-      let installWorker = reg.installing;
-      installWorker.onstatechange = () => {
-        switch (installWorker.state) {
-          case 'installed':
-            if (navigator.serviceWorker.controller) {
-              console.log('New or updated content is available');
-            } else {
-              console.log('Content is now available offline!');
-            }
-            break;
-          case'redundant':
-            console.error('Installing service worker became redundant');
-            break;
-
-        }
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js', {
+      scope: '/'
+    }).then((reg) => {
+      console.log('Service worker registered');
+    }).catch(e => console.log('Error during service worker registration: ', e))
+  });
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.userChoice.then((choice) => {
+      if (choice.outcome === 'dismissed') {
+        console.log('User cancelled homescreen install');
+      } else {
+        console.log('User added app to homescreen');
       }
-    }
-  }).catch(e => console.log('Error during service worker registration: ', e))
+    })
+  })
 }

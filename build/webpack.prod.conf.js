@@ -86,7 +86,9 @@ const webpackConfig = merge(baseWebpackConfig, {
     // split vendor js into its own file
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',
-      minChunks (module) {
+      minChunks (module, count) {
+        // var context = module.context;
+        // return context && context.indexOf('node_modules') >= 0;
         // any required modules inside node_modules are extracted to vendor
         return (
           module.resource &&
@@ -108,7 +110,7 @@ const webpackConfig = merge(baseWebpackConfig, {
     // see: https://webpack.js.org/plugins/commons-chunk-plugin/#extra-async-commons-chunk
     new webpack.optimize.CommonsChunkPlugin({
       name: 'app',
-      async: 'vendor-async',
+      async: true,
       children: true,
       minChunks: 3
     }),
