@@ -1,14 +1,5 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from '@/components/home'
-import Jobs from '@/components/jobs'
-import Job from '@/components/job'
-import CreateJob from '@/components/createJob'
-import Profile from '@/components/profile'
-import GetStarted from '@/components/get-started'
-import Tip from '@/components/tip'
-import GetFunds from '@/components/get-funds'
-import Pricing from '@/components/pricing'
 
 Vue.use(Router);
 
@@ -18,47 +9,65 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: (resolve) => {
+        require(['@/components/home.vue'], resolve)
+      }
     },
     {
       path: '/jobs',
       name: 'jobs',
-      component: Jobs
+      component: (resolve) => {
+        require(['@/components/jobs.vue'], resolve)
+      }
     },
     {
       path: '/job/:id',
       name: 'job',
-      component: Job
+      component: (resolve) => {
+        require(['@/components/job.vue'], resolve)
+      }
     },
     {
       path: '/createJob',
       name: 'create-job',
-      component: CreateJob
+      component: (resolve) => {
+        require(['@/components/createJob.vue'], resolve)
+      }
     },
     {
       path: '/profile',
       name: 'profile',
-      component: Profile
+      component: (resolve) => {
+        require(['@/components/profile.vue'], resolve)
+      }
     },
     {
       path: '/get-started',
       name: 'get-started',
-      component: GetStarted
+      component: (resolve) => {
+        require(['@/components/get-started.vue'], resolve)
+      }
     },
     {
       path: '/tip',
       name: 'tip',
-      component: Tip
+      component: (resolve) => {
+        require(['@/components/tip.vue'], resolve)
+      }
     },
     {
       path: '/get-funds',
       name: 'get-funds',
-      component: GetFunds
+      component: (resolve) => {
+        require(['@/components/get-funds.vue'], resolve)
+      }
     },
     {
       path: '/pricing',
       name: 'pricing',
-      component: Pricing
+      component: (resolve) => {
+        require(['@/components/pricing.vue'], resolve)
+      }
     }
   ]
 })
