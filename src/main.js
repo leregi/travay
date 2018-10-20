@@ -71,14 +71,14 @@ Vue.use(VueUI, {
  let gaConfig = {
    appName: 'Travay',
    appVersion: '0.0.1',
-   trackingId: 'UA-71718222-9', // Prod
-   // trackingId: 'UA-71718222-10', // Dev
+   // trackingId: 'UA-71718222-9', // Prod
+   trackingId: 'UA-71718222-10', // Dev
    debug: true, // Whether or not display console logs debugs (optional)
  };
 
  let mixpanelConfig = {
-   token: '4be6f13d7bef9dab00a44273cade05a3' // Prod
-   // token: '3bfe6ae0af73a824d94cfc4ec8c4d4b8' // Dev
+   // token: '4be6f13d7bef9dab00a44273cade05a3' // Prod
+   token: '3bfe6ae0af73a824d94cfc4ec8c4d4b8' // Dev
  };
 
  Vue.use(VueMultianalytics, {
@@ -114,7 +114,7 @@ if (shouldSW) {
   });
   window.addEventListener('beforeinstallprompt', (e) => {
     e.userChoice.then((choice) => {
-      if (choice.outcome == 'dismissed') {
+      if (choice.outcome === 'dismissed') {
         console.log('User cancelled homescreen install');
       } else {
         console.log('User added app to homescreen');
