@@ -223,7 +223,8 @@
             </vue-grid-row>
 
             <br/>
-            <vue-button warn>
+            <vue-button warn
+                        :loading="isLoading">
               {{ $t('App.createJob.submitPostAJob' /* Submit Job Posting */) }}
             </vue-button>
           </form>
@@ -318,7 +319,7 @@
         }
 
         // Add Analytics event
-        // this.$ma.trackEvent({category: 'Click', action: 'Create Job Click', label: 'Create Job', value: ''});
+        this.$ma.trackEvent({category: 'Click', action: 'Create Job Click', label: 'Create Job', value: ''});
 
         this.isLoading = true
         const {form} = this
