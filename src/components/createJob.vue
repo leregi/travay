@@ -223,7 +223,8 @@
             </vue-grid-row>
 
             <br/>
-            <vue-button warn>
+            <vue-button warn
+                        :loading="isLoading">
               {{ $t('App.createJob.submitPostAJob' /* Submit Job Posting */) }}
             </vue-button>
           </form>
