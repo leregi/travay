@@ -223,8 +223,7 @@
             </vue-grid-row>
 
             <br/>
-            <vue-button warn
-                        @click.prevent.stop="createJob">
+            <vue-button warn>
               {{ $t('App.createJob.submitPostAJob' /* Submit Job Posting */) }}
             </vue-button>
           </form>
