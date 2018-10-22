@@ -151,7 +151,7 @@
                   name="setEvaluatorCreateJob"
                   id="setEvaluatorCreateJob"
                   :placeholder="$t('App.createJob.evaluatorEthAddress')"
-                  v-model="form.setEvaluatorCreateJob" />
+                  v-model="form.setEvaluatorCreateJob"/>
                 <div>{{ $t('App.createJob.setEvaluatorExplanation' /* Each job requires an evaluator. This
                   individual can be supervisor of the job worker and cannot be the same person that created the job. If
                   you leave this blank anyone can become the evaluator of a job. For example, if the job is trash
@@ -237,13 +237,13 @@
 </template>
 
 <script>
-  import {mapActions, mapGetters, mapMutations} from 'vuex';
-  import {NETWORKS} from "../util/constants/networks";
-  import {uuid} from 'vue-uuid';
-  import firebase from 'firebase';
-  import db from '../firebaseinit-dev';
-  import {any} from 'bluebird';
-  import {store} from '../store';
+  import {mapActions, mapGetters, mapMutations} from 'vuex'
+  import {NETWORKS} from '../util/constants/networks'
+  import {uuid} from 'vue-uuid'
+  import firebase from 'firebase'
+  import db from '../firebaseinit-dev'
+  import {any} from 'bluebird'
+  import {store} from '../store'
   import * as types from '../store/types'
   import truffleContract from 'truffle-contract'
   import EscrowContract from '../../contracts/build/contracts/Escrow.json'
@@ -311,15 +311,34 @@
       removeRequirement (i) {
         this.form.deliverable.splice(i, 1)
       },
+      waitForReceipt(hash, cb) {
+        web3.eth.getTransactionReceipt(hash, function (error, receipt) {
+          if (error) {
+            error (error)
+          }
+
+          if (receipt !== null) {
+            // Transaction went through
+            if (cb) {
+              cb(receipt)
+            }
+          } else {
+            // Try again in 1 second
+            window.setTimeout(function () {
+              waitForReceipt(hash, cb)
+            }, 1000)
+          }
+        })
+      },
       createJob () {
 
-        if (this.$store.state.web3.networkId !== "3") {
-          this.openNetworkModal();
-          return;
+        if (this.$store.state.web3.networkId !== '3') {
+          this.openNetworkModal()
+          return
         }
 
-        // Add Analytics event
-        this.$ma.trackEvent({category: 'Click', action: 'Create Job Click', label: 'Create Job', value: ''});
+        // Analytics
+        this.$ma.trackEvent({category: 'Click', action: 'Create Job Click', label: 'Create Job', value: ''})
 
         this.isLoading = true
         const {form} = this
@@ -339,8 +358,7 @@
 
             const self = this
 
-            // const jobId = uuid.v1()
-            const jobId = JobID.toString();
+            const jobId = JobID.toString()
 
             let jobData = {
               salary: {
@@ -382,7 +400,7 @@
               })
               .catch(function (error) {
                 this.isLoading = false
-                console.error('Error adding new job: ', error)
+                console.error('error adding new job: ', error)
               })
             if (this.hasEmptyFields) {
               this.$nextTick(() => {
@@ -397,6 +415,7 @@
                 }, 750)
               })
             }
+            this.waitForReceipt();
           })
           .catch(error => {
             this.isLoading = false
@@ -412,53 +431,50 @@
 
         return new Promise(async (resolve, reject) => {
 
-          const Escrow = truffleContract(EscrowContract);
-          const DAI = truffleContract(DAIContract);
+          const Escrow = truffleContract(EscrowContract)
+          const DAI = truffleContract(DAIContract)
 
-          window.Escrow = Escrow;
-          Escrow.setProvider(this.$store.state.web3.web3Instance().currentProvider);
-          Escrow.defaults({from: this.$store.state.web3.web3Instance().eth.coinbase});
-          DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
+          window.Escrow = Escrow
+          Escrow.setProvider(this.$store.state.web3.web3Instance().currentProvider)
+          Escrow.defaults({from: this.$store.state.web3.web3Instance().eth.coinbase})
+          DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider)
 
-          const EscrowInstance = await Escrow.deployed();
-          const DAIInstance = await DAI.deployed();
+          const EscrowInstance = await Escrow.deployed()
+          const DAIInstance = await DAI.deployed()
 
-          window.EscrowInstance = EscrowInstance;
-          const pool = EscrowInstance.address;
+          window.EscrowInstance = EscrowInstance
+          const pool = EscrowInstance.address
 
-          DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
-          DAI.defaults({from: this.$store.state.web3.web3Instance().eth.coinbase});
+          DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider)
+          DAI.defaults({from: this.$store.state.web3.web3Instance().eth.coinbase})
 
-          const description = this.form.task;
-          const salary = this.form.salary * (10 ** 18);
-          const noOfTotalPayments = this.form.termOfEmployment;
-          const evaluator = this.form.setEvaluatorCreateJob;
+          const description = this.form.task
+          const salary = this.form.salary * (10 ** 18)
+          const noOfTotalPayments = this.form.termOfEmployment
+          const evaluator = this.form.setEvaluatorCreateJob
 
           web3.eth.getAccounts(async (error, accounts) => {
 
-            console.log('create job escrow is doing something')
+            const manager = accounts[0]
 
-            const manager = accounts[0];
-
-            console.log(EscrowInstance.address, DAIInstance.address);
+            console.log(EscrowInstance.address, DAIInstance.address)
 
             try {
               await DAIInstance.approve(EscrowInstance.address, salary, {
                 from: manager
-              });
-              console.log('in create job')
+              })
               const result = await EscrowInstance.createJob(description, salary, noOfTotalPayments, evaluator, {
                 from: manager
-              });
-              console.log(result);
+              })
+              console.log(result)
 
               const job = await EscrowInstance.getJob(
                 result.logs[0].args.JobID.toNumber()
-              );
+              )
               resolve(result.logs[0].args.JobID.toNumber())
 
             } catch (error) {
-              reject(error);
+              reject(error)
             }
           })
         })
@@ -471,7 +487,7 @@
       estimatedWorkerPayout: function () {
         return this.form.salary - this.form.salary * 0.02
       },
-      hasErrors () {
+      haserrors () {
         return this.errors && this.errors.items.length > 0
       },
       hasEmptyFields () {
@@ -491,7 +507,7 @@
       },
       isSubmitDisabled () {
         this.x
-        return this.hasErrors || this.hasEmptyFields
+        return this.haserrors || this.hasEmptyFields
       }
     }
   }

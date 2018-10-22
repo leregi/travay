@@ -506,7 +506,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({category: 'Click', action: 'Canceled Job', label: 'Cancel Job', value: ''})
 
         this.isLoading = true
@@ -544,7 +544,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({category: 'Click', action: 'Set Evaluator', label: 'Set Evaluator', value: ''})
 
         this.isLoading = true
@@ -602,7 +602,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({category: 'Click', action: 'Mark Job Complete', label: 'Mark Job Complete', value: ''})
 
         const jobId = this.job.taskId
@@ -613,7 +613,7 @@
           .then(JobID => {
             const job = db.collection('jobs').doc(jobId)
             const update = job.update({
-              // TODO solve undefined error
+              // TODO resolve undefined error
               // workerMilestonesCompleted: [...workerMilestoneCompleted, new Date()]
             })
 
@@ -638,7 +638,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({
           category: 'Click',
           action: 'Evaluate Job As Completed Successfully',
@@ -676,7 +676,7 @@
       async evaluateJobAsCompletedUnsucessfully () {
         // const jobId = this.job.taskId;
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({
           category: 'Click',
           action: 'Evaluate Job As Completed Unsuccessfully',
@@ -714,7 +714,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({category: 'Click', action: 'Claim Payout', label: 'Claim Payout', value: ''})
 
         this.isLoading = true
@@ -772,7 +772,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({
           category: 'Click',
           action: 'Sponsor Job from Job Page',
@@ -804,7 +804,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({category: 'Click', action: 'Claim Job Click', label: 'Claim Job', value: ''})
 
         this.isLoading = true
@@ -875,7 +875,7 @@
           return
         }
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({category: 'Click', action: 'Payout Job', label: 'Payout Job', value: ''})
 
         const taskId = this.$route.params.id
@@ -951,7 +951,7 @@
       },
       uploadProofOfWork () {
 
-        // Add Analytics event
+        // Analytics
         this.$ma.trackEvent({
           category: 'Click',
           action: 'Upload Proof of Work',
@@ -1048,7 +1048,7 @@
             const worker = accounts[0] // account that is logged into MetaMask
 
             if (error) {
-              throw new {name: 'Exception', message: 'Accounts are not found'}
+              throw new {name: 'Exception', message: 'Accounts are not found'};
             }
 
             try {
