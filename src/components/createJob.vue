@@ -311,25 +311,6 @@
       removeRequirement (i) {
         this.form.deliverable.splice(i, 1)
       },
-      waitForReceipt(hash, cb) {
-        web3.eth.getTransactionReceipt(hash, function (error, receipt) {
-          if (error) {
-            error (error)
-          }
-
-          if (receipt !== null) {
-            // Transaction went through
-            if (cb) {
-              cb(receipt)
-            }
-          } else {
-            // Try again in 1 second
-            window.setTimeout(function () {
-              waitForReceipt(hash, cb)
-            }, 1000)
-          }
-        })
-      },
       createJob () {
 
         if (this.$store.state.web3.networkId !== '3') {
@@ -415,7 +396,6 @@
                 }, 750)
               })
             }
-            this.waitForReceipt();
           })
           .catch(error => {
             this.isLoading = false
@@ -463,7 +443,7 @@
               await DAIInstance.approve(EscrowInstance.address, salary, {
                 from: manager
               })
-              const result = await EscrowInstance.createJob(description, salary, noOfTotalPayments, evaluator, {
+              const result = await EscrowInstance.createJob(description, salary, noOfTotalPayments, {
                 from: manager
               })
               console.log(result)
