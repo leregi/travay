@@ -112,7 +112,7 @@ contract Escrow{
         _;
     }
 
-    event JobCreated(address manager, uint salary, uint noOfTotalPayments, uint JobID, string description, address _evaluator);
+    event JobCreated(address manager, uint salary, uint noOfTotalPayments, uint JobID, string description);
 
     /// @notice this function creates a job
     /// @dev Uses transferFrom on the DAI token contract
@@ -125,7 +125,7 @@ contract Escrow{
         address[] memory empty;
         uint finalSalary = _salary.sub(_salary.mul(1).div(50));
 
-        Job memory newJob = Job(_description, msg.sender, finalSalary, 0x0, JobStatus.Open, _noOfTotalPayments, 0, 0, 0, _evaluator, false, 0, empty, 0);
+        Job memory newJob = Job(_description, msg.sender, finalSalary, 0x0, JobStatus.Open, _noOfTotalPayments, 0, 0, 0, 0x0, false, 0, empty, 0);
         Jobs.push(newJob);
         JobsByManager[msg.sender].push(jobCount);
 
