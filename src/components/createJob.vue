@@ -237,264 +237,298 @@
 </template>
 
 <script>
-  import {mapActions, mapGetters, mapMutations} from 'vuex'
-  import {NETWORKS} from '../util/constants/networks'
-  import {uuid} from 'vue-uuid'
-  import firebase from 'firebase'
-  import db from '../firebaseinit-dev'
-  import {any} from 'bluebird'
-  import {store} from '../store'
-  import * as types from '../store/types'
-  import truffleContract from 'truffle-contract'
-  import EscrowContract from '../../contracts/build/contracts/Escrow.json'
-  import DAIContract from '../../contracts/build/contracts/DAI.json'
-  import Loading from 'vue-loading-overlay'
+import { mapActions, mapGetters, mapMutations } from "vuex";
+import { NETWORKS } from "../util/constants/networks";
+import { uuid } from "vue-uuid";
+import firebase from "firebase";
+import db from "../firebaseinit-dev";
+import { any } from "bluebird";
+import { store } from "../store";
+import * as types from "../store/types";
+import truffleContract from "truffle-contract";
+import EscrowContract from "../../contracts/build/contracts/Escrow.json";
+import DAIContract from "../../contracts/build/contracts/DAI.json";
+import Loading from "vue-loading-overlay";
 
-  const state = {
-    date1: new Date()
-  }
+const state = {
+  date1: new Date()
+};
 
-  export default {
-    metaInfo: {
-      title: 'Post a Job',
-      meta: [
-        {
-          name: 'Post a Job',
-          content: 'Posting a job in Travay.'
-        }
-      ]
-    },
-    name: 'createJob',
-    $_veeValidate: {
-      validator: 'new'
-    },
-    components: {
-      Loading
-    },
-    data () {
-      return {
-        fullPage: true,
-        locale: '',
-        form: {
-          taskId: 0,
-          task: '',
-          brief: '',
-          payouts: [],
-          deliverable: [],
-          datePosted: '',
-          // payoutEvaluator: '',
-          salary: '',
-          setEvaluatorCreateJob: '',
-          termOfEmployment: '',
-          cityOfWork: '',
-          isTaskIdDisabled: true,
-          state: state,
-          isDatePostedDisabled: true,
-          acceptTerms: false
-        },
-        isLoading: false,
-        requirement: '',
-        status: {}
+export default {
+  metaInfo: {
+    title: "Post a Job",
+    meta: [
+      {
+        name: "Post a Job",
+        content: "Posting a job in Travay."
       }
+    ]
+  },
+  name: "createJob",
+  $_veeValidate: {
+    validator: "new"
+  },
+  components: {
+    Loading
+  },
+  data() {
+    return {
+      fullPage: true,
+      locale: "",
+      form: {
+        taskId: "",
+        task: "dummy data",
+        brief: "dummy data",
+        payouts: [],
+        deliverable: [],
+        datePosted: "",
+        // payoutEvaluator: '',
+        salary: "1",
+        setEvaluatorCreateJob: "0x22741e8eE26E83AaCBf098a31DE5af1b1231920e",
+        termOfEmployment: "1",
+        cityOfWork: "dummy data",
+        isTaskIdDisabled: true,
+        state: state,
+        isDatePostedDisabled: true,
+        acceptTerms: true
+      },
+      isLoading: false,
+      requirement: "",
+      status: {}
+    };
+  },
+  methods: {
+    ...mapActions({
+      openNetworkModal: types.OPEN_NETWORK_MODAL
+    }),
+    calendarChange(value) {
+      this.$set(this.form, "closingDate", value);
     },
-    methods: {
-      ...mapActions({
-        openNetworkModal: types.OPEN_NETWORK_MODAL
-      }),
-      calendarChange (value) {
-        this.$set(this.form, 'closingDate', value)
-      },
-      addRequirement () {
-        if (this.requirement) this.form.deliverable.push(this.requirement)
-        this.requirement = ''
-      },
-      removeRequirement (i) {
-        this.form.deliverable.splice(i, 1)
-      },
-      createJob () {
+    addRequirement() {
+      if (this.requirement) this.form.deliverable.push(this.requirement);
+      this.requirement = "";
+    },
+    removeRequirement(i) {
+      this.form.deliverable.splice(i, 1);
+    },
+    createJob() {
+      if (this.$store.state.web3.networkId !== "3") {
+        this.openNetworkModal();
+        return;
+      }
 
-        if (this.$store.state.web3.networkId !== '3') {
-          this.openNetworkModal()
-          return
-        }
+      // Analytics
+      this.$ma.trackEvent({
+        category: "Click",
+        action: "Create Job Click",
+        label: "Create Job",
+        value: ""
+      });
 
-        // Analytics
-        this.$ma.trackEvent({category: 'Click', action: 'Create Job Click', label: 'Create Job', value: ''})
+      this.isLoading = true;
+      const { form } = this;
 
-        this.isLoading = true
-        const {form} = this
+      // if (this.hasEmptyFields) {
+      //   this.isLoading = false;
+      //   EventBus.$emit('notification.add', {
+      //     id: 1,
+      //     title: this.$t("App.createJob.emptyFieldsTitle" /* Oops! */),
+      //     text: this.$t("App.createJob.emptyFieldsText" /* Please fill in all fields. */)
+      //   });
+      //   return false;
+      // }
 
-        // if (this.hasEmptyFields) {
-        //   this.isLoading = false;
-        //   EventBus.$emit('notification.add', {
-        //     id: 1,
-        //     title: this.$t("App.createJob.emptyFieldsTitle" /* Oops! */),
-        //     text: this.$t("App.createJob.emptyFieldsText" /* Please fill in all fields. */)
-        //   });
-        //   return false;
-        // }
+      this.createJobInEscrow()
+        .then(JobID => {
+          const self = this;
 
-        this.createJobInEscrow()
-          .then(JobID => {
+          const jobId = JobID.toString();
 
-            const self = this
-
-            const jobId = JobID.toString()
-
-            let jobData = {
-              salary: {
-                'full-time-rate': form.salary
-              },
-              brief: form.brief,
-              'date-posted': new Date(),
-              deliverable: form.deliverable,
-              payouts: [],
-              skill: form.skill,
-              domain: form.domain,
-              termOfEmployment: form.termOfEmployment,
-              // payouts: {
-              //   evaluator: 0,
-              //   manager: 0,
-              //   worker: 0
-              // },
-              role: {
-                '0': this.userId,
-                '1': [this.form.setEvaluatorCreateJob,],
-                '2': '',
-                '3': []
-              },
-              sponsoredAmount: 0,
-              task: form.task,
-              cityOfWork: form.cityOfWork,
-              taskId: jobId,
-              country: form.country,
-              status: {
-                state: 'incomplete'
-              }
+          let jobData = {
+            salary: {
+              "full-time-rate": form.salary
+            },
+            brief: form.brief,
+            "date-posted": new Date(),
+            deliverable: form.deliverable,
+            payouts: [],
+            skill: form.skill,
+            domain: form.domain,
+            termOfEmployment: form.termOfEmployment,
+            // payouts: {
+            //   evaluator: 0,
+            //   manager: 0,
+            //   worker: 0
+            // },
+            role: {
+              "0": this.userId,
+              "1": [this.form.setEvaluatorCreateJob],
+              "2": "",
+              "3": []
+            },
+            sponsoredAmount: 0,
+            task: form.task,
+            cityOfWork: form.cityOfWork,
+            taskId: jobId,
+            country: form.country,
+            status: {
+              state: "incomplete"
             }
-            db
-              .collection('jobs')
-              .doc(jobId)
-              .set(jobData)
-              .then(function (docref) {
-                self.clearForm()
-              })
-              .catch(function (error) {
-                this.isLoading = false
-                console.error('error adding new job: ', error)
-              })
-            if (this.hasEmptyFields) {
-              this.$nextTick(() => {
-                setTimeout(() => {
-                  EventBus.$emit('notification.add', {
-                    id: 1,
-                    title: this.$t('App.createJob.jobPostedTitle' /* Yay! */),
-                    text: this.$t('App.createJob.jobPostedText' /* Your job is now posted! Click here to see the job. */),
-                    link: `/job/${jobId}`
-                  })
-                  this.isLoading = false
-                }, 750)
-              })
-            }
-          })
-          .catch(error => {
-            this.isLoading = false
-            console.log(error)
-          })
-      },
-      clearForm () {
-        Object.keys(this.form).forEach(key => {
-          this.form[key] = ''
+          };
+          db
+            .collection("jobs")
+            .doc(jobId)
+            .set(jobData)
+            .then(function(docref) {
+              self.clearForm();
+            })
+            .catch(function(error) {
+              this.isLoading = false;
+              console.error("error adding new job: ", error);
+            });
+          if (this.hasEmptyFields) {
+            this.$nextTick(() => {
+              setTimeout(() => {
+                EventBus.$emit("notification.add", {
+                  id: 1,
+                  title: this.$t("App.createJob.jobPostedTitle" /* Yay! */),
+                  text: this.$t(
+                    "App.createJob.jobPostedText" /* Your job is now posted! Click here to see the job. */
+                  ),
+                  link: `/job/${jobId}`
+                });
+                this.isLoading = false;
+              }, 750);
+            });
+          }
         })
-      },
-      async createJobInEscrow () {
+        .catch(error => {
+          this.isLoading = false;
+          console.log(error);
+        });
+    },
+    clearForm() {
+      Object.keys(this.form).forEach(key => {
+        this.form[key] = "";
+      });
+    },
+    async createJobInEscrow() {
+      return new Promise(async (resolve, reject) => {
+        const Escrow = truffleContract(EscrowContract);
+        const DAI = truffleContract(DAIContract);
 
-        return new Promise(async (resolve, reject) => {
+        window.Escrow = Escrow;
+        Escrow.setProvider(
+          this.$store.state.web3.web3Instance().currentProvider
+        );
+        Escrow.defaults({
+          from: this.$store.state.web3.web3Instance().eth.coinbase
+        });
+        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
 
-          const Escrow = truffleContract(EscrowContract)
-          const DAI = truffleContract(DAIContract)
+        const EscrowInstance = await Escrow.deployed();
+        const DAIInstance = await DAI.deployed();
 
-          window.Escrow = Escrow
-          Escrow.setProvider(this.$store.state.web3.web3Instance().currentProvider)
-          Escrow.defaults({from: this.$store.state.web3.web3Instance().eth.coinbase})
-          DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider)
+        window.EscrowInstance = EscrowInstance;
+        const pool = EscrowInstance.address;
 
-          const EscrowInstance = await Escrow.deployed()
-          const DAIInstance = await DAI.deployed()
+        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
+        DAI.defaults({
+          from: this.$store.state.web3.web3Instance().eth.coinbase
+        });
 
-          window.EscrowInstance = EscrowInstance
-          const pool = EscrowInstance.address
+        web3.eth.getAccounts(async (error, accounts) => {
+          const description = this.form.task;
+          const salary = this.form.salary * 10 ** 18;
+          const noOfTotalPayments = this.form.termOfEmployment;
+          const evaluator = this.form.setEvaluatorCreateJob;
+          const manager = accounts[0];
+          const sender = accounts[0];
 
-          DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider)
-          DAI.defaults({from: this.$store.state.web3.web3Instance().eth.coinbase})
+          console.log(EscrowInstance.address, DAIInstance.address);
 
-          const description = this.form.task
-          const salary = this.form.salary * (10 ** 18)
-          const noOfTotalPayments = this.form.termOfEmployment
-          const evaluator = this.form.setEvaluatorCreateJob
+          web3.eth.getGasPrice(async (err, gasPrice) => {
+            gasPrice = gasPrice.toNumber();
 
-          web3.eth.getAccounts(async (error, accounts) => {
-
-            const manager = accounts[0]
-
-            console.log(EscrowInstance.address, DAIInstance.address)
+            console.log("Gas Price ", gasPrice);
 
             try {
               await DAIInstance.approve(EscrowInstance.address, salary, {
                 from: manager
-              })
-              const result = await EscrowInstance.createJob(description, salary, noOfTotalPayments, {
-                from: manager
-              })
-              console.log(result)
+              });
+
+              const approveGas = await DAIInstance.approve.estimateGas(
+                salary,
+                {
+                  from: sender
+                }
+              );
+
+              console.log("Gas calcuated for Approve ", approveGas);
+
+              await DAIInstance.approve(EscrowInstance.address, salary, {
+                from: sender,
+                gas: approveGas,
+                gasPrice: gasPrice
+              });
+
+              const result = await EscrowInstance.createJob(
+                description,
+                salary,
+                noOfTotalPayments,
+                {
+                  from: manager
+                }
+              );
+              console.log(result);
 
               const job = await EscrowInstance.getJob(
                 result.logs[0].args.JobID.toNumber()
-              )
-              resolve(result.logs[0].args.JobID.toNumber())
-
+              );
+              resolve(result.logs[0].args.JobID.toNumber());
             } catch (error) {
-              reject(error)
+              reject(error);
             }
-          })
-        })
-      }
+          });
+        });
+      });
+    }
+  },
+  computed: {
+    ...mapGetters({
+      userId: types.GET_USER_ID
+    }),
+    estimatedWorkerPayout: function() {
+      return this.form.salary - this.form.salary * 0.02;
     },
-    computed: {
-      ...mapGetters({
-        userId: types.GET_USER_ID
-      }),
-      estimatedWorkerPayout: function () {
-        return this.form.salary - this.form.salary * 0.02
-      },
-      haserrors () {
-        return this.errors && this.errors.items.length > 0
-      },
-      hasEmptyFields () {
-        let hasEmptyField
+    haserrors() {
+      return this.errors && this.errors.items.length > 0;
+    },
+    hasEmptyFields() {
+      let hasEmptyField;
 
-        Object.keys(this.form).forEach((key) => {
-          if (
-            (key !== 'taskId' &&
-              key !== 'datePosted' &&
-              (this.form[key] === '' || this.form[key] === false)) ||
-            (Array.isArray(this.form[key]) && this.form[key].length === 0)
-          ) {
-            hasEmptyField = true
-          }
-        })
-        return hasEmptyField
-      },
-      isSubmitDisabled () {
-        this.x
-        return this.haserrors || this.hasEmptyFields
-      }
+      Object.keys(this.form).forEach(key => {
+        if (
+          (key !== "taskId" &&
+            key !== "datePosted" &&
+            (this.form[key] === "" || this.form[key] === false)) ||
+          (Array.isArray(this.form[key]) && this.form[key].length === 0)
+        ) {
+          hasEmptyField = true;
+        }
+      });
+      return hasEmptyField;
+    },
+    isSubmitDisabled() {
+      this.x;
+      return this.haserrors || this.hasEmptyFields;
     }
   }
+};
 </script>
 
 <style lang="scss" module>
-  .loading-parent {
-    position: relative;
-  }
+.loading-parent {
+  position: relative;
+}
 </style>
