@@ -88,8 +88,8 @@ export default {
       if (this.$store.state.web3.balance < this.form.amount) {
         EventBus.$emit("notification.add", {
           id: 1,
-          title: this.$t("App.helloMetaMask.account"),
-          text: this.$t("App.insufficient.balance")
+          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
         });
         return false;
       }
