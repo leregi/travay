@@ -338,7 +338,6 @@ export default {
       const { form } = this;
 
       // if (this.hasEmptyFields) {
-      //   this.isLoading = false;
       //   EventBus.$emit('notification.add', {
       //     id: 1,
       //     title: this.$t("App.createJob.emptyFieldsTitle" /* Oops! */),
