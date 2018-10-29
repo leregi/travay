@@ -341,7 +341,7 @@ export default {
       this.createJobInEscrow()
         .then(JobID => {
           const self = this;
-
+          console.log("top");
           const jobId = JobID.toString();
 
           let jobData = {
@@ -375,6 +375,8 @@ export default {
               state: "incomplete"
             }
           };
+          console.log("after data");
+
           db
             .collection("jobs")
             .doc(jobId)
@@ -453,11 +455,12 @@ export default {
             console.log("Gas Price ", gasPrice);
 
             try {
-              await DAIInstance.approve(EscrowInstance.address, salary, {
-                from: manager
-              });
+              // await DAIInstance.approve(EscrowInstance.address, salary, {
+              //   from: manager
+              // });
 
               const approveGas = await DAIInstance.approve.estimateGas(
+                EscrowInstance.address,
                 salary,
                 {
                   from: sender
@@ -471,7 +474,12 @@ export default {
                 gas: approveGas,
                 gasPrice: gasPrice
               });
-
+              console.log(
+                "values === ",
+                description,
+                salary,
+                noOfTotalPayments
+              );
               const result = await EscrowInstance.createJob(
                 description,
                 salary,
@@ -481,10 +489,7 @@ export default {
                 }
               );
               console.log(result);
-
-              const job = await EscrowInstance.getJob(
-                result.logs[0].args.JobID.toNumber()
-              );
+              console.log(result.logs[0].args.JobID.toNumber());
               resolve(result.logs[0].args.JobID.toNumber());
             } catch (error) {
               reject(error);
