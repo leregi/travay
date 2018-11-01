@@ -312,17 +312,8 @@ export default {
       this.form.deliverable.splice(i, 1);
     },
     createJob() {
-      if (this.$store.state.web3.networkId !== "3") {
+      if (this.$store.state.web3.networkId !== "1") {
         this.openNetworkModal();
-        return;
-      }
-
-      if (this.$store.state.web3.balance <= this.form.salary) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
         return;
       }
 
@@ -453,30 +444,46 @@ export default {
 
         web3.eth.getAccounts(async (error, accounts) => {
           const manager = accounts[0];
+          const daiBalance =  DAIInstance.balanceOf(
+            manager
+          );
+          daiBalance.then(async (balance) => {
+                if (balance < salary) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else {
+                  try {
+                    await DAIInstance.approve(EscrowInstance.address, salary, {
+                      from: manager
+                    });
+                    const result = await EscrowInstance.createJob(
+                      description,
+                      salary,
+                      noOfTotalPayments,
+                      {
+                        from: manager
+                      }
+                    );
+                    console.log(result);
 
-          console.log(EscrowInstance.address, DAIInstance.address);
-
-          try {
-            await DAIInstance.approve(EscrowInstance.address, salary, {
-              from: manager
-            });
-            const result = await EscrowInstance.createJob(
-              description,
-              salary,
-              noOfTotalPayments,
-              {
-                from: manager
-              }
-            );
-            console.log(result);
-
-            const job = await EscrowInstance.getJob(
-              result.logs[0].args.JobID.toNumber()
-            );
-            resolve(result.logs[0].args.JobID.toNumber());
-          } catch (error) {
-            reject(error);
-          }
+                    const job = await EscrowInstance.getJob(
+                      result.logs[0].args.JobID.toNumber()
+                    );
+                    resolve(result.logs[0].args.JobID.toNumber());
+                  } catch (error) {
+                    reject(error);
+                  }
+                }
+          }).catch(err => {
+            console.log(err);
+            this.isLoading = false;
+            return false;
+          })
         });
       });
     }

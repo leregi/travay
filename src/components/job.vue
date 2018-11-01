@@ -512,15 +512,6 @@ export default {
         return;
       }
 
-      if (this.$store.state.web3.balance <= 0) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
-        return;
-      }
-
       this.isLoading = true;
 
       const jobId = this.job.taskId;
@@ -563,15 +554,6 @@ export default {
 
       if (this.$store.state.web3.networkId !== "3") {
         this.openNetworkModal();
-        return;
-      }
-
-      if (this.$store.state.web3.balance <= 0) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
         return;
       }
 
@@ -639,15 +621,6 @@ export default {
         return;
       }
 
-      if (this.$store.state.web3.balance <= 0) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
-        return;
-      }
-
       const jobId = this.job.taskId;
 
       this.isLoading = true;
@@ -688,15 +661,6 @@ export default {
 
       if (this.$store.state.web3.networkId !== "3") {
         this.openNetworkModal();
-        return;
-      }
-
-      if (this.$store.state.web3.balance <= 0) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
         return;
       }
 
@@ -773,15 +737,6 @@ export default {
 
       if (this.$store.state.web3.networkId !== "3") {
         this.openNetworkModal();
-        return;
-      }
-
-      if (this.$store.state.web3.balance <= 0) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
         return;
       }
 
@@ -892,15 +847,6 @@ export default {
         return false;
       }
 
-      if (this.$store.state.web3.balance <= 0) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
-        return;
-      }
-
       this.isLoading = true;
 
       this.claimJobInEscrowContract()
@@ -966,15 +912,6 @@ export default {
       if (this.$store.state.web3.networkId !== "3") {
         this.openNetworkModal();
         return;
-      }
-
-      if (this.$store.state.web3.balance <= 0) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-        });
-        return false;
       }
 
       const taskId = this.$route.params.id;
@@ -1160,15 +1097,36 @@ export default {
             }();
           }
 
-          try {
-            const result = await EscrowInstance.claimJob(JobID, {
-              from: worker
-            });
-            console.log(result);
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
+          const daiBalance =  DAIInstance.balanceOf(
+            worker
+          );
+
+          daiBalance.then(async (balance) => {
+            if (balance <= 0) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else {
+                  try {
+                    const result = await EscrowInstance.claimJob(JobID, {
+                      from: worker
+                    });
+                    console.log(result);
+                    resolve(result);
+                  } catch (error) {
+                    reject(error);
+                  }
+                }
+          }).catch(err => {
+            console.log(err);
+            this.isLoading = false;
+            return false;
+          });
+
         });
       });
     },
@@ -1201,18 +1159,39 @@ export default {
 
         web3.eth.getAccounts(async (error, accounts) => {
           const manager = accounts[0];
+          const daiBalance =  DAIInstance.balanceOf(
+            manager
+          );
 
-          try {
-            console.log("JobID", JobID);
-            console.log(typeof JobID);
+          daiBalance.then(async (balance) => {
+            if (balance <= 0) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else {
+                  try {
+                    console.log("JobID", JobID);
+                    console.log(typeof JobID);
 
-            const result = await EscrowInstance.cancelJob(JobID, {
-              from: manager
-            });
-            resolve(result.logs[0].args.JobID);
-          } catch (error) {
-            reject(error);
-          }
+                    const result = await EscrowInstance.cancelJob(JobID, {
+                      from: manager
+                    });
+                    resolve(result.logs[0].args.JobID);
+                  } catch (error) {
+                    reject(error);
+                  }
+                }
+          }).catch(err => {
+            console.log(err);
+            this.isLoading = false;
+            return false;
+          });
+
+          
         });
       });
     },
@@ -1252,13 +1231,32 @@ export default {
               message: "Accounts are not found"
             }();
           }
+          const daiBalance =  DAIInstance.balanceOf(
+            evaluator
+          );
 
-          try {
-            await EscrowInstance.setEvaluator(JobID, { from: evaluator });
-            resolve(JobID);
-          } catch (error) {
-            reject(error);
-          }
+          daiBalance.then(async (balance) => {
+            if (balance <= 0) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else {
+                  try {
+                    await EscrowInstance.setEvaluator(JobID, { from: evaluator });
+                    resolve(JobID);
+                  } catch (error) {
+                    reject(error);
+                  }
+                }
+          }).catch(err => {
+            console.log(err);
+            this.isLoading = false;
+            return false;
+          });
         });
       });
     },
@@ -1291,14 +1289,34 @@ export default {
           const worker = accounts[0];
           const JobID = this.job.taskId;
 
-          try {
-            const result = await EscrowInstance.provideProofOfWork(JobID, {
-              from: worker
-            });
-            resolve(JobID);
-          } catch (error) {
-            reject(error);
-          }
+          const daiBalance =  DAIInstance.balanceOf(
+            worker
+          );
+
+          daiBalance.then(async (balance) => {
+            if (balance <= 0) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else {
+                  try {
+                    const result = await EscrowInstance.provideProofOfWork(JobID, {
+                      from: worker
+                    });
+                    resolve(JobID);
+                  } catch (error) {
+                    reject(error);
+                  }
+                }
+          }).catch(err => {
+            console.log(err);
+            this.isLoading = false;
+            return false;
+          });
         });
       });
     },
@@ -1330,18 +1348,38 @@ export default {
         web3.eth.getAccounts(async (err, accounts) => {
           const JobID = this.job.taskId;
           const evaluator = accounts[0]; // Person logged into MetaMask
+          const daiBalance =  DAIInstance.balanceOf(
+            evaluator
+          );
 
-          try {
-            console.log("JobID", JobID);
-            console.log(typeof JobID);
+          daiBalance.then(async (balance) => {
+            if (balance <= 0) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else {
+                  try {
+                      console.log("JobID", JobID);
+                      console.log(typeof JobID);
 
-            const result = await EscrowInstance.confirmProofOfWork(JobID, {
-              from: evaluator
-            });
-            resolve(JobID);
-          } catch (error) {
-            reject(error);
-          }
+                      const result = await EscrowInstance.confirmProofOfWork(JobID, {
+                        from: evaluator
+                      });
+                      resolve(JobID);
+                    } catch (error) {
+                      reject(error);
+                    }
+                }
+          }).catch(err => {
+            console.log(err);
+            this.isLoading = false;
+            return false;
+          });
+          
         });
       });
     },
@@ -1416,18 +1454,37 @@ export default {
           const JobID = this.job.taskId;
 
           console.log(JobID);
+          const daiBalance =  DAIInstance.balanceOf(
+            worker
+          );
 
-          try {
-            const Job = await EscrowInstance.getJob(JobID);
+          daiBalance.then(async (balance) => {
+            if (balance <= 0) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
+                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else {
+                  try {
+                    const Job = await EscrowInstance.getJob(JobID);
 
-            const result = await EscrowInstance.claimPayment(JobID, {
-              from: worker
-            });
+                    const result = await EscrowInstance.claimPayment(JobID, {
+                      from: worker
+                    });
 
-            resolve(JobID);
-          } catch (error) {
-            reject(error);
-          }
+                    resolve(JobID);
+                  } catch (error) {
+                    reject(error);
+                  }
+                }
+          }).catch(err => {
+            console.log(err);
+            this.isLoading = false;
+            return false;
+          });
         });
       });
     }
