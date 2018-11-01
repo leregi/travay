@@ -244,7 +244,8 @@
   "components.register.title": "Enskri",
   "components.truncate.showLess": "Montre mwens",
   "components.truncate.showMore": "Montre plis",
-  "App.insufficient.balance": "Ou pa gen ase lajan pou fè tranzaksyon sa a.",
+  "App.insufficient.etherBalance": "Ou pa gen ase lajan pou fè tranzaksyon sa a.",
+  "App.insufficient.daiBalance": "Ou pa gen ase Dai.",
   "domainOptions": [
     {"label": "Chwazi yon domèn", "value": null},
     {"label": "Kominote", "value": "community"},

@@ -52,3 +52,6 @@ Ropsten
 Contract: https://ropsten.etherscan.io/address/0x186d2514ab736a41b31b8d1f623de17f0ab8380f
 ARBITRATOR = "0xB06cEF6B14dd249f5a0977F645436cC4f4095325";
 DAI_COIN_ADDRESS = "0xee3ea3cd9afd7cb2c476d44a70fc9ed4cd3ba438";
+
+## v2
+

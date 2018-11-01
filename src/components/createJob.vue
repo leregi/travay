@@ -104,7 +104,7 @@
                   name="termOfEmployment"
                   id="termOfEmployment"
                   type="number"
-                  :placeholder="$t('App.createJob.nrMonthsInForm')"
+                  :placeholder="$t('App.createJob.monthsInForm')"
                   v-model="form.termOfEmployment"
                   required/>
                 <div>{{ $t('App.createJob.termOfEmploymentExplanation' /* Months of work is also referenced as
@@ -277,8 +277,8 @@ export default {
       locale: "",
       form: {
         taskId: "",
-        task: "dummy data",
-        brief: "dummy data",
+        task: "TEST JOB",
+        brief: "TEST JOB",
         payouts: [],
         deliverable: [],
         datePosted: "",
@@ -286,7 +286,7 @@ export default {
         salary: "1",
         setEvaluatorCreateJob: "0x22741e8eE26E83AaCBf098a31DE5af1b1231920e",
         termOfEmployment: "1",
-        cityOfWork: "dummy data",
+        cityOfWork: "TEST JOB",
         isTaskIdDisabled: true,
         state: state,
         isDatePostedDisabled: true,
@@ -377,8 +377,7 @@ export default {
           };
           console.log("after data");
 
-          db
-            .collection("jobs")
+          db.collection("jobs")
             .doc(jobId)
             .set(jobData)
             .then(function(docref) {
@@ -423,9 +422,11 @@ export default {
         Escrow.setProvider(
           this.$store.state.web3.web3Instance().currentProvider
         );
+
         Escrow.defaults({
           from: this.$store.state.web3.web3Instance().eth.coinbase
         });
+
         DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
 
         const EscrowInstance = await Escrow.deployed();
@@ -447,53 +448,74 @@ export default {
           const manager = accounts[0];
           const sender = accounts[0];
 
-          console.log(EscrowInstance.address, DAIInstance.address);
-
           web3.eth.getGasPrice(async (err, gasPrice) => {
             gasPrice = gasPrice.toNumber();
 
-            console.log("Gas Price ", gasPrice);
+            const daiBalance = DAIInstance.balanceOf(manager);
 
-            try {
-              // await DAIInstance.approve(EscrowInstance.address, salary, {
-              //   from: manager
-              // });
-
-              const approveGas = await DAIInstance.approve.estimateGas(
-                EscrowInstance.address,
-                salary,
-                {
-                  from: sender
+            daiBalance
+              .then(async balance => {
+                if (balance < salary) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t(
+                      "App.helloMetaMask.account" /* Ethereum Account */
+                    ),
+                    text: this.$t(
+                      "App.insufficient.daiBalance" /* You don't have enough Dai.  */
+                    )
+                  });
+                  this.isLoading = false;
+                  return false;
+                } else if (this.$store.state.web3.balance < this.form.amount) {
+                  EventBus.$emit("notification.add", {
+                    id: 1,
+                    title: this.$t("App.helloMetaMask.account"),
+                    text: this.$t("App.insufficient.balance")
+                  });
+                  return false;
+                } else {
+                  try {
+                    const approveGas = await DAIInstance.approve.estimateGas(
+                      EscrowInstance.address,
+                      salary,
+                      {
+                        from: sender
+                      }
+                    );
+                    console.log("Gas calcuated for Approve ", approveGas);
+                    await DAIInstance.approve(EscrowInstance.address, salary, {
+                      from: sender,
+                      gas: approveGas,
+                      gasPrice: gasPrice
+                    });
+                    console.log(
+                      "values === ",
+                      description,
+                      salary,
+                      parseInt(noOfTotalPayments)
+                    );
+                    const result = await EscrowInstance.createJob(
+                      description,
+                      salary,
+                      parseInt(noOfTotalPayments),
+                      {
+                        from: manager
+                      }
+                    );
+                    console.log(result);
+                    console.log(result.logs[0].args.JobID.toNumber());
+                    resolve(result.logs[0].args.JobID.toNumber());
+                  } catch (error) {
+                    reject(error);
+                  }
                 }
-              );
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, salary, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
+              })
+              .catch(err => {
+                console.log(err);
+                this.isLoading = false;
+                return false;
               });
-              console.log(
-                "values === ",
-                description,
-                salary,
-               parseInt(noOfTotalPayments)
-              );
-              const result = await EscrowInstance.createJob(
-                description,
-                salary,
-                parseInt(noOfTotalPayments),
-                {
-                  from: manager
-                }
-              );
-              console.log(result);
-              console.log(result.logs[0].args.JobID.toNumber());
-              resolve(result.logs[0].args.JobID.toNumber());
-            } catch (error) {
-              reject(error);
-            }
           });
         });
       });

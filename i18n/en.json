@@ -244,7 +244,8 @@
   "components.register.title": "Register",
   "components.truncate.showLess": "Show less",
   "components.truncate.showMore": "Show more",
-  "App.insufficient.balance": "You don't have enough funds to perform this transaction.",
+  "App.insufficient.etherBalance": "You don't have enough funds to perform this transaction.",
+  "App.insufficient.daiBalance": "You don't have enough Dai.",
   "domainOptions": [
     {"label": "Choose a Domain", "value": null},
     {"label": "Community", "value": "community"},
