@@ -84,15 +84,32 @@ export default {
     ...mapActions({
       openNetworkModal: types.OPEN_NETWORK_MODAL
     }),
-    checkBalance() {
-      if (this.$store.state.web3.balance < this.form.amount) {
-        EventBus.$emit("notification.add", {
-          id: 1,
-          title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-          text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
+    async checkBalance() {
+      this.isLoading = true;
+        const DAI = truffleContract(DAIContract);
+        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
+        const DAIInstance = await DAI.deployed();
+        DAI.defaults({
+          from: this.$store.state.web3.web3Instance().eth.coinbase
         });
-        return false;
-      }
+        web3.eth.getAccounts((error, accounts) => {
+          const daiBalance = DAIInstance.balanceOf(accounts[0]);
+          daiBalance.then(balance => {
+            if ((balance / Math.pow(10, 18)) < this.form.amount) {
+              EventBus.$emit("notification.add", {
+                id: 1,
+                title: this.$t(
+                  "App.helloMetaMask.account" /* Ethereum Account */
+                ),
+                text: this.$t(
+                  "App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */
+                )
+              });
+              this.isLoading = false;
+              return false;
+            }
+          });
+        });
     },
     async makeTipEscrow() {
       if (this.$store.state.web3.networkId !== "3") {

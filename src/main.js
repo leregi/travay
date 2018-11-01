@@ -52,7 +52,7 @@ const dateTimeFormats = {
 };
 
 export const i18n = new VueI18n({
-  locale: 'en', // set default locale
+  locale: 'ht', // set default locale
   messages,
   dateTimeFormats
 });
