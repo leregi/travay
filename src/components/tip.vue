@@ -84,7 +84,7 @@ export default {
     ...mapActions({
       openNetworkModal: types.OPEN_NETWORK_MODAL
     }),
-    async checkBalance() {
+        async checkBalance() {
       this.isLoading = true;
         const DAI = truffleContract(DAIContract);
         DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
@@ -157,17 +157,13 @@ export default {
           const receiver = this.form.receiver;
           const sender = accounts[0];
 
-          console.log("tip amount", payment);
-
           web3.eth.getGasPrice(async (err, gasPrice) => {
             gasPrice = gasPrice.toNumber();
 
             console.log("Gas Price ", gasPrice);
+
             try {
-              let receiver_balance_before = await DAIInstance.balanceOf(
-                receiver
-              );
-              receiver_balance_before = receiver_balance_before.toNumber();
+
 
               const approveGas = await DAIInstance.approve.estimateGas(
                 receiver,
@@ -189,10 +185,7 @@ export default {
                 from: sender
               });
 
-              let receiver_balance_after = await DAIInstance.balanceOf(
-                receiver
-              );
-              receiver_balance_after = receiver_balance_after.toNumber();
+
 
               this.$nextTick(() => {
                 setTimeout(() => {
@@ -207,6 +200,7 @@ export default {
                   });
                 }, 800);
               });
+              resolve(result);
               self.clearForm();
             } catch (error) {
               self.isLoading = false;
@@ -224,6 +218,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .loading-parent {

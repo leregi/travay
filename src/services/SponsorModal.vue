@@ -75,6 +75,91 @@ export default {
     ...mapActions({
       openNetworkModal: types.OPEN_NETWORK_MODAL
     }),
+    sponsorJob() {
+      this.isLoading = true;
+      this.sponsorAmountToEscrow()
+        .then(result => {
+          this.$emit("sponsorSubmit", this.sponsorAmount);
+          this.sponsorAmount = "";
+          this.isLoading = false;
+        })
+        .catch(error => {
+          console.log(error)
+        });
+    },
+    async sponsorAmountToEscrow() {
+      this.$ma.trackEvent({
+        category: "Click",
+        action: "Sponsor a Job",
+        label: "Sponsor a Job",
+        value: ""
+      });
+
+      return new Promise(async (resolve, reject) => {
+        const Escrow = truffleContract(EscrowContract);
+        const DAI = truffleContract(DAIContract);
+
+        window.Escrow = Escrow;
+        Escrow.setProvider(
+          this.$store.state.web3.web3Instance().currentProvider
+        );
+        Escrow.defaults({
+          from: this.$store.state.web3.web3Instance().eth.coinbase
+        });
+        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
+
+        const EscrowInstance = await Escrow.deployed();
+        const DAIInstance = await DAI.deployed();
+
+        window.EscrowInstance = EscrowInstance;
+        const pool = EscrowInstance.address;
+
+        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
+        DAI.defaults({
+          from: this.$store.state.web3.web3Instance().eth.coinbase
+        });
+
+        web3.eth.getAccounts(async (err, accounts) => {
+          const JobID = this.job.taskId;
+          const payment = this.sponsorAmount * 10 ** 18;
+          const sponsor = accounts[0];
+          const sender = accounts[0];
+
+          web3.eth.getGasPrice(async (err, gasPrice) => {
+            gasPrice = gasPrice.toNumber();
+
+            console.log("Gas Price ", gasPrice);
+
+            try {
+              await DAIInstance.approve(EscrowInstance.address, payment, {
+                from: sponsor
+              });
+
+              const approveGas = await DAIInstance.approve.estimateGas(
+                receiver,
+                payment,
+                {
+                  from: sender
+                }
+              );
+
+              console.log("Gas calcuated for Approve ", approveGas);
+
+              await DAIInstance.approve(EscrowInstance.address, payment, {
+                from: sender,
+                gas: approveGas,
+                gasPrice: gasPrice
+              });
+
+              const result = await EscrowInstance.sponsorDAI(JobID, payment, {
+                from: sponsor
+              });
+              resolve(result);
+            } catch (error) {
+              reject(error);
+            }
+          });
+        });
     async checkBalance() {
       this.isLoading = true;
         const DAI = truffleContract(DAIContract);
@@ -101,74 +186,7 @@ export default {
             }
           });
         });
-    },
-    sponsorJob() {
-      this.$ma.trackEvent({
-        category: "Click",
-        action: "Sponsor a Job",
-        label: "Sponsor a Job",
-        value: ""
-      });
-
-      this.isLoading = true;
-
-      this.sponsorAmountToEscrow()
-        .then(result => {
-          this.$emit("sponsorSubmit", this.sponsorAmount);
-          this.sponsorAmount = "";
-          this.isLoading = false;
-        })
-        .catch(error => {
-          this.isLoading = false;
-        });
-    },
-    async sponsorAmountToEscrow() {
-      return new Promise(async (resolve, reject) => {
-        const Escrow = truffleContract(EscrowContract);
-        const DAI = truffleContract(DAIContract);
-
-        window.Escrow = Escrow;
-        Escrow.setProvider(
-          this.$store.state.web3.web3Instance().currentProvider
-        );
-        Escrow.defaults({
-          from: this.$store.state.web3.web3Instance().eth.coinbase
-        });
-        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
-
-        const EscrowInstance = await Escrow.deployed();
-        const DAIInstance = await DAI.deployed();
-
-        window.EscrowInstance = EscrowInstance;
-        const pool = EscrowInstance.address;
-
-        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
-        DAI.defaults({
-          from: this.$store.state.web3.web3Instance().eth.coinbase
-        });
-
-        const JobID = this.job.taskId;
-        const payment = this.sponsorAmount * 10 ** 18;
-
-        web3.eth.getAccounts(async (err, accounts) => {
-          const sponsor = accounts[0];
-          try {
-            console.log("payment", payment);
-            console.log("JobID", JobID);
-            console.log(typeof JobID);
-
-            await DAIInstance.approve(EscrowInstance.address, payment, {
-              from: sponsor
-            });
-
-            const result = await EscrowInstance.sponsorDAI(JobID, payment, {
-              from: sponsor
-            });
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
-        });
+    }
       });
     }
   }

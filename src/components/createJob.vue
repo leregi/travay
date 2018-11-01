@@ -104,7 +104,7 @@
                   name="termOfEmployment"
                   id="termOfEmployment"
                   type="number"
-                  :placeholder="$t('App.createJob.monthsInForm')"
+                  :placeholder="$t('App.createJob.nrMonthsInForm')"
                   v-model="form.termOfEmployment"
                   required/>
                 <div>{{ $t('App.createJob.termOfEmploymentExplanation' /* Months of work is also referenced as
@@ -276,21 +276,21 @@ export default {
       fullPage: true,
       locale: "",
       form: {
-        taskId: 0,
-        task: "",
-        brief: "",
+        taskId: "",
+        task: "dummy data",
+        brief: "dummy data",
         payouts: [],
         deliverable: [],
         datePosted: "",
         // payoutEvaluator: '',
-        salary: "",
-        setEvaluatorCreateJob: "",
-        termOfEmployment: "",
-        cityOfWork: "",
+        salary: "1",
+        setEvaluatorCreateJob: "0x22741e8eE26E83AaCBf098a31DE5af1b1231920e",
+        termOfEmployment: "1",
+        cityOfWork: "dummy data",
         isTaskIdDisabled: true,
         state: state,
         isDatePostedDisabled: true,
-        acceptTerms: false
+        acceptTerms: true
       },
       isLoading: false,
       requirement: "",
@@ -329,6 +329,7 @@ export default {
       const { form } = this;
 
       // if (this.hasEmptyFields) {
+      //   this.isLoading = false;
       //   EventBus.$emit('notification.add', {
       //     id: 1,
       //     title: this.$t("App.createJob.emptyFieldsTitle" /* Oops! */),
@@ -340,7 +341,7 @@ export default {
       this.createJobInEscrow()
         .then(JobID => {
           const self = this;
-
+          console.log("top");
           const jobId = JobID.toString();
 
           let jobData = {
@@ -374,6 +375,8 @@ export default {
               state: "incomplete"
             }
           };
+          console.log("after data");
+
           db
             .collection("jobs")
             .doc(jobId)
@@ -436,53 +439,62 @@ export default {
           from: this.$store.state.web3.web3Instance().eth.coinbase
         });
 
-        const description = this.form.task;
-        const salary = this.form.salary * 10 ** 18;
-        const noOfTotalPayments = this.form.termOfEmployment;
-        const evaluator = this.form.setEvaluatorCreateJob;
-
         web3.eth.getAccounts(async (error, accounts) => {
+          const description = this.form.task;
+          const salary = this.form.salary * 10 ** 18;
+          const noOfTotalPayments = this.form.termOfEmployment;
+          const evaluator = this.form.setEvaluatorCreateJob;
           const manager = accounts[0];
-          const daiBalance =  DAIInstance.balanceOf(
-            manager
-          );
-          daiBalance.then(async (balance) => {
-                if (balance < salary) {
-                  EventBus.$emit("notification.add", {
-                    id: 1,
-                    title: this.$t("App.helloMetaMask.account" /* Ethereum Account */),
-                    text: this.$t("App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */)
-                  });
-                  this.isLoading = false;
-                  return false;
-                } else {
-                  try {
-                    await DAIInstance.approve(EscrowInstance.address, salary, {
-                      from: manager
-                    });
-                    const result = await EscrowInstance.createJob(
-                      description,
-                      salary,
-                      noOfTotalPayments,
-                      {
-                        from: manager
-                      }
-                    );
-                    console.log(result);
+          const sender = accounts[0];
 
-                    const job = await EscrowInstance.getJob(
-                      result.logs[0].args.JobID.toNumber()
-                    );
-                    resolve(result.logs[0].args.JobID.toNumber());
-                  } catch (error) {
-                    reject(error);
-                  }
+          console.log(EscrowInstance.address, DAIInstance.address);
+
+          web3.eth.getGasPrice(async (err, gasPrice) => {
+            gasPrice = gasPrice.toNumber();
+
+            console.log("Gas Price ", gasPrice);
+
+            try {
+              // await DAIInstance.approve(EscrowInstance.address, salary, {
+              //   from: manager
+              // });
+
+              const approveGas = await DAIInstance.approve.estimateGas(
+                EscrowInstance.address,
+                salary,
+                {
+                  from: sender
                 }
-          }).catch(err => {
-            console.log(err);
-            this.isLoading = false;
-            return false;
-          })
+              );
+
+              console.log("Gas calcuated for Approve ", approveGas);
+
+              await DAIInstance.approve(EscrowInstance.address, salary, {
+                from: sender,
+                gas: approveGas,
+                gasPrice: gasPrice
+              });
+              console.log(
+                "values === ",
+                description,
+                salary,
+               parseInt(noOfTotalPayments)
+              );
+              const result = await EscrowInstance.createJob(
+                description,
+                salary,
+                parseInt(noOfTotalPayments),
+                {
+                  from: manager
+                }
+              );
+              console.log(result);
+              console.log(result.logs[0].args.JobID.toNumber());
+              resolve(result.logs[0].args.JobID.toNumber());
+            } catch (error) {
+              reject(error);
+            }
+          });
         });
       });
     }
