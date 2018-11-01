@@ -312,7 +312,7 @@ export default {
       this.form.deliverable.splice(i, 1);
     },
     createJob() {
-      if (this.$store.state.web3.networkId !== "1") {
+      if (this.$store.state.web3.networkId !== "3") {
         this.openNetworkModal();
         return;
       }
