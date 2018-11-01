@@ -15,6 +15,7 @@
         placeholder="Enter Amount"
         validation="required"
         type="number"
+        @change="checkBalance"
         v-model="sponsorAmount"/>
 
       <vue-button primary @click.prevent.stop="sponsorJob">Sponsor</vue-button>
@@ -159,6 +160,33 @@ export default {
             }
           });
         });
+    async checkBalance() {
+      this.isLoading = true;
+        const DAI = truffleContract(DAIContract);
+        DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
+        const DAIInstance = await DAI.deployed();
+        DAI.defaults({
+          from: this.$store.state.web3.web3Instance().eth.coinbase
+        });
+        web3.eth.getAccounts((error, accounts) => {
+          const daiBalance = DAIInstance.balanceOf(accounts[0]);
+          daiBalance.then(balance => {
+            if ((balance / Math.pow(10, 18)) < this.sponsorAmount) {
+              EventBus.$emit("notification.add", {
+                id: 1,
+                title: this.$t(
+                  "App.helloMetaMask.account" /* Ethereum Account */
+                ),
+                text: this.$t(
+                  "App.insufficient.balance" /* You don't have enough funds to perform this transaction.  */
+                )
+              });
+              this.isLoading = false;
+              return false;
+            }
+          });
+        });
+    }
       });
     }
   }

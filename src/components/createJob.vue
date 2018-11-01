@@ -478,12 +478,12 @@ export default {
                 "values === ",
                 description,
                 salary,
-                noOfTotalPayments
+               parseInt(noOfTotalPayments)
               );
               const result = await EscrowInstance.createJob(
                 description,
                 salary,
-                noOfTotalPayments,
+                parseInt(noOfTotalPayments),
                 {
                   from: manager
                 }

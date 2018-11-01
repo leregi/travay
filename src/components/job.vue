@@ -304,14 +304,16 @@
                     additional information. */)
                     }}</p>
                   <br>
-                  <a v-userRole.signedIn.canBecomeEvaluator="{role: job.role}" @click="setEvaluator()"
+                  <!-- <a v-userRole.signedIn.canBecomeEvaluator="{role: job.role}" @click="setEvaluator()" -->
+                  <a @click="setEvaluator()"
                      style="color: white;">
                     <vue-button primary>
                       {{ $t('App.job.becomeEvaluatorForJob' /* Become the Evaluator */) }}
                     </vue-button>
                   </a>
                   <br><br>
-                  <a @click="evaluateJobAsCompletedSucessfully()" v-userRole.signedIn.evaluator="{role: job.role}"
+                  <!-- <a @click="evaluateJobAsCompletedSucessfully()" v-userRole.signedIn.evaluator="{role: job.role}" -->
+                  <a @click="evaluateJobAsCompletedSucessfully()"
                      style="color: white;">
                     <vue-button primary>
                       {{ $t('App.job.evaluateJobAsSuccess' /* Approve Work */) }}
@@ -1114,20 +1116,6 @@ export default {
                 from: manager
               });
 
-              const approveGas = await DAIInstance.approve.estimateGas(
-                {
-                  from: sender
-                }
-              );
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
-              });
-
               resolve(result.logs[0].args.JobID);
             } catch (error) {
               reject(error);
@@ -1145,9 +1133,11 @@ export default {
         Escrow.setProvider(
           this.$store.state.web3.web3Instance().currentProvider
         );
+
         Escrow.defaults({
           from: this.$store.state.web3.web3Instance().eth.coinbase
         });
+
         DAI.setProvider(this.$store.state.web3.web3Instance().currentProvider);
 
         const EscrowInstance = await Escrow.deployed();
@@ -1176,25 +1166,11 @@ export default {
           web3.eth.getGasPrice(async (err, gasPrice) => {
             gasPrice = gasPrice.toNumber();
 
-            console.log("Gas Price ", gasPrice);
+            console.log("Gas Price ", gasPrice, JobID);
 
             try {
               const result = await EscrowInstance.claimJob(JobID, {
                 from: worker
-              });
-
-              const approveGas = await DAIInstance.approve.estimateGas(
-                {
-                  from: sender
-                }
-              );
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
               });
 
               console.log(result);
@@ -1244,18 +1220,6 @@ export default {
             try {
               const result = await EscrowInstance.provideProofOfWork(JobID, {
                 from: worker
-              });
-
-              const approveGas = await DAIInstance.approve.estimateGas({
-                from: sender
-              });
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
               });
 
               resolve(JobID, result);
@@ -1309,21 +1273,7 @@ export default {
             console.log("Gas Price ", gasPrice);
 
             try {
-              await EscrowInstance.setEvaluator(JobID, { from: evaluator });
-
-              const approveGas = await DAIInstance.approve.estimateGas(
-                {
-                  from: sender
-                }
-              );
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
-              });
+              const result = await EscrowInstance.setEvaluator(JobID, { from: evaluator });
 
               resolve(JobID, result);
             } catch (error) {
@@ -1376,20 +1326,6 @@ export default {
                 from: evaluator
               });
 
-              const approveGas = await DAIInstance.approve.estimateGas(
-                {
-                  from: sender
-                }
-              );
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
-              });
-
               resolve(JobID, result);
             } catch (error) {
               reject(error);
@@ -1436,20 +1372,6 @@ export default {
             try {
               const result = await EscrowInstance.approvePayment(JobID, {
                 from: manager
-              });
-
-              const approveGas = await DAIInstance.approve.estimateGas(
-                {
-                  from: sender
-                }
-              );
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
               });
 
               resolve(JobID);
@@ -1504,21 +1426,7 @@ export default {
                 from: worker
               });
 
-              const approveGas = await DAIInstance.approve.estimateGas(
-                {
-                  from: sender
-                }
-              );
-
-              console.log("Gas calcuated for Approve ", approveGas);
-
-              await DAIInstance.approve(EscrowInstance.address, {
-                from: sender,
-                gas: approveGas,
-                gasPrice: gasPrice
-              });
-
-              resolve(JobID);
+              resolve(result.logs[0].JobID);
             } catch (error) {
               reject(error);
             }
