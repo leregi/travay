@@ -412,6 +412,7 @@ export default {
   },
   data() {
     return {
+      seen:true,
       isLoading: false,
       fullPage: true,
       job: {},
@@ -893,6 +894,7 @@ export default {
                 doc.ref.update({
                   claimedJobs: [...claimedJobs, this.job.taskId]
                 });
+                this.seen == false;
               });
             this.$nextTick(() => {
               setTimeout(() => {
@@ -1449,5 +1451,10 @@ export default {
 <style lang="scss" module>
 .loading-parent {
   position: relative;
+}
+.chat-component {
+  bottom: 0;
+  right: 0;
+  position: fixed;
 }
 </style>
