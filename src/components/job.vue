@@ -361,6 +361,11 @@
       </vue-grid-row>
 
     </vue-grid>
+
+    <!-- TEMPLATE OF THE CHAT GROUP-->
+  <div class="chat-components">
+    <Chat v-if="seen" />
+  </div>
   </div>
 </template>
 
@@ -373,6 +378,8 @@ import axios from "axios";
 import firebase from "firebase";
 import db from "../firebaseinit-dev";
 import SponsorModal from "../services/SponsorModal.vue";
+// import the chat component
+import Chat from "../components/chat/chat.vue";
 import { uuid } from "vue-uuid";
 import moment from "moment";
 import { sponsorSubmitMixin } from "../mixins/sponsorSubmitMixin";
@@ -400,7 +407,8 @@ export default {
   },
   components: {
     SponsorModal,
-    Loading
+    Loading,
+    Chat
   },
   data() {
     return {
