@@ -467,11 +467,11 @@ export default {
                   });
                   this.isLoading = false;
                   return false;
-                } else if (this.$store.state.web3.balance < this.form.amount) {
+                } else if (this.$store.state.web3.balance < gasPrice) {
                   EventBus.$emit("notification.add", {
                     id: 1,
                     title: this.$t("App.helloMetaMask.account"),
-                    text: this.$t("App.insufficient.balance")
+                    text: this.$t("App.insufficient.etherBalance")
                   });
                   return false;
                 } else {
