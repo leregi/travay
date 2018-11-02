@@ -1,5 +1,7 @@
 import firebase from 'firebase';
 import 'firebase/firestore';
+// import firebase from '@firebase/app';
+// import '@firebase/firestore';
 
 var config = {
   apiKey: "AIzaSyDDFkHUquiG9yrbHDyiUeCGCCqcXqSdZek",
@@ -24,6 +26,10 @@ try {
 } catch (err) {
   console.warn('Firebase already initialised!', err);
 }
+
+export default firestore;
+export const firebaseDatabase = firebaseApp.database();
+
 
 export default firestore;
 export const firebaseDatabase = firebaseApp.database();

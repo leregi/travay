@@ -1,13 +1,15 @@
 import firebase from 'firebase';
 import 'firebase/firestore';
+// import firebase from '@firebase/app';
+// import '@firebase/firestore';
 
 var config = {
-  apiKey: 'AIzaSyANwSGI5HlCNaxSBrV66QUZofxtII4jW8o',
-  authDomain: 'travay-dapp.firebaseapp.com',
-  databaseURL: 'https://travay-dapp.firebaseio.com',
-  projectId: 'travay-dapp',
-  storageBucket: 'travay-dapp.appspot.com',
-  messagingSenderId: '752035908821'
+  apiKey: "AIzaSyDDFkHUquiG9yrbHDyiUeCGCCqcXqSdZek",
+  authDomain: "travay-dev.firebaseapp.com",
+  databaseURL: "https://travay-dev.firebaseio.com",
+  projectId: "travay-dev",
+  storageBucket: "travay-dev.appspot.com",
+  messagingSenderId: "766677685680"
 };
 
 let firebaseApp;
